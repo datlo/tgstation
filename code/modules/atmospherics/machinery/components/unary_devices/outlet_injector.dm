@@ -3,7 +3,7 @@
 
 	name = "air injector"
 	desc = "Has a valve and pump attached to it."
-	
+
 	use_power = IDLE_POWER_USE
 	can_unwrench = TRUE
 	shift_underlay_only = FALSE
@@ -127,15 +127,10 @@
 		var/datum/gas_mixture/air_contents = airs[1]
 		volume_rate = CLAMP(number, 0, air_contents.volume)
 
-	if("status" in signal.data)
-		spawn(2)
-			broadcast_status()
-		return //do not update_icon
+	addtimer(CALLBACK(src, .proc/broadcast_status), 2)
 
-	spawn(2)
-		broadcast_status()
-
-	update_icon()
+	if(!("status" in signal.data)) //do not update_icon
+		update_icon()
 
 
 /obj/machinery/atmospherics/components/unary/outlet_injector/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = FALSE, \
@@ -192,8 +187,8 @@
 	icon_state = "inje_map-1"
 
 /obj/machinery/atmospherics/components/unary/outlet_injector/layer3
-	piping_layer = 2
-	icon_state = "inje_map-2"
+	piping_layer = 3
+	icon_state = "inje_map-3"
 
 /obj/machinery/atmospherics/components/unary/outlet_injector/on
 	on = TRUE
@@ -203,8 +198,8 @@
 	icon_state = "inje_map-1"
 
 /obj/machinery/atmospherics/components/unary/outlet_injector/on/layer3
-	piping_layer = 2
-	icon_state = "inje_map-2"
+	piping_layer = 3
+	icon_state = "inje_map-3"
 
 /obj/machinery/atmospherics/components/unary/outlet_injector/atmos
 	frequency = FREQ_ATMOS_STORAGE

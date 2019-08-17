@@ -40,7 +40,7 @@
 	icon_state = "ice_2"
 	damage = 0
 	damage_type = BURN
-	nodamage = 1
+	nodamage = TRUE
 	flag = "energy"
 	temperature = 50
 
@@ -146,7 +146,8 @@
 	. = ..()
 	if(.)
 		var/mob/living/L = target
-		L.apply_status_effect(/datum/status_effect/freon/watcher)
+		if(istype(L))
+			L.apply_status_effect(/datum/status_effect/freon/watcher)
 
 /mob/living/simple_animal/hostile/asteroid/basilisk/watcher/tendril
 	fromtendril = TRUE

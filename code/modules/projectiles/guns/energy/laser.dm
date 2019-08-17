@@ -4,7 +4,7 @@
 	icon_state = "laser"
 	item_state = "laser"
 	w_class = WEIGHT_CLASS_NORMAL
-	materials = list(MAT_METAL=2000)
+	materials = list(/datum/material/iron=2000)
 	ammo_type = list(/obj/item/ammo_casing/energy/lasergun)
 	ammo_x_offset = 1
 	shaded_charge = 1
@@ -47,9 +47,9 @@
 	ammo_type = list(/obj/item/ammo_casing/energy/laser/scatter, /obj/item/ammo_casing/energy/laser)
 
 /obj/item/gun/energy/laser/cyborg
-	can_charge = 0
+	can_charge = FALSE
 	desc = "An energy-based laser gun that draws power from the cyborg's internal energy cell directly. So this is what freedom looks like?"
-	use_cyborg_cell = 1
+	use_cyborg_cell = TRUE
 
 /obj/item/gun/energy/laser/cyborg/emp_act()
 	return

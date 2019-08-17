@@ -1,4 +1,4 @@
-/mob/living/carbon/proc/monkeyize(tr_flags = (TR_KEEPITEMS | TR_KEEPVIRUS | TR_DEFAULTMSG))
+/mob/living/carbon/proc/monkeyize(tr_flags = (TR_KEEPITEMS | TR_KEEPVIRUS | TR_KEEPSTUNS | TR_KEEPREAGENTS | TR_DEFAULTMSG))
 	if (notransform)
 		return
 	//Handle items on mob
@@ -50,7 +50,7 @@
 
 	if(tr_flags & TR_KEEPSE)
 		O.dna.mutation_index = dna.mutation_index
-		O.dna.set_se(1, get_initialized_mutation(RACEMUT))
+		O.dna.set_se(1, GET_INITIALIZED_MUTATION(RACEMUT))
 
 	if(suiciding)
 		O.set_suicide(suiciding)
@@ -73,7 +73,7 @@
 		O.setOxyLoss(getOxyLoss(), 0)
 		O.setCloneLoss(getCloneLoss(), 0)
 		O.adjustFireLoss(getFireLoss(), 0)
-		O.setBrainLoss(getBrainLoss(), 0)
+		O.setOrganLoss(ORGAN_SLOT_BRAIN, getOrganLoss(ORGAN_SLOT_BRAIN))
 		O.updatehealth()
 		O.radiation = radiation
 
@@ -93,7 +93,9 @@
 			mind.transfer_to(O)
 			var/datum/antagonist/changeling/changeling = O.mind.has_antag_datum(/datum/antagonist/changeling)
 			if(changeling)
-				changeling.purchasedpowers += new /obj/effect/proc_holder/changeling/humanform(null)
+				var/datum/action/changeling/humanform/hf = new
+				changeling.purchasedpowers += hf
+				changeling.regain_powers()
 
 		for(var/X in internal_organs)
 			var/obj/item/organ/I = X
@@ -121,12 +123,27 @@
 					qdel(G) //we lose the organs in the missing limbs
 		qdel(BP)
 
+	//transfer stuns
+	if(tr_flags & TR_KEEPSTUNS)
+		O.Stun(AmountStun(), ignore_canstun = TRUE)
+		O.Knockdown(AmountKnockdown(), ignore_canstun = TRUE)
+		O.Immobilize(AmountImmobilized(), ignore_canstun = TRUE)
+		O.Paralyze(AmountParalyzed(), ignore_canstun = TRUE)
+		O.Unconscious(AmountUnconscious(), ignore_canstun = TRUE)
+		O.Sleeping(AmountSleeping(), ignore_canstun = TRUE)
+
+	//transfer reagents
+	if(tr_flags & TR_KEEPREAGENTS)
+		reagents.trans_to(O, reagents.total_volume)
+
 	//transfer mind if we didn't yet
 	if(mind)
 		mind.transfer_to(O)
 		var/datum/antagonist/changeling/changeling = O.mind.has_antag_datum(/datum/antagonist/changeling)
 		if(changeling)
-			changeling.purchasedpowers += new /obj/effect/proc_holder/changeling/humanform(null)
+			var/datum/action/changeling/humanform/hf = new
+			changeling.purchasedpowers += hf
+			changeling.regain_powers()
 
 
 	if (tr_flags & TR_DEFAULTMSG)
@@ -145,7 +162,7 @@
 //////////////////////////           Humanize               //////////////////////////////
 //Could probably be merged with monkeyize but other transformations got their own procs, too
 
-/mob/living/carbon/proc/humanize(tr_flags = (TR_KEEPITEMS | TR_KEEPVIRUS | TR_DEFAULTMSG))
+/mob/living/carbon/proc/humanize(tr_flags = (TR_KEEPITEMS | TR_KEEPVIRUS | TR_KEEPSTUNS | TR_KEEPREAGENTS | TR_DEFAULTMSG))
 	if (notransform)
 		return
 	//Handle items on mob
@@ -205,7 +222,7 @@
 
 	if(tr_flags & TR_KEEPSE)
 		O.dna.mutation_index = dna.mutation_index
-		O.dna.set_se(0, get_initialized_mutation(RACEMUT))
+		O.dna.set_se(0, GET_INITIALIZED_MUTATION(RACEMUT))
 		O.domutcheck()
 
 	if(suiciding)
@@ -229,7 +246,7 @@
 		O.setOxyLoss(getOxyLoss(), 0)
 		O.setCloneLoss(getCloneLoss(), 0)
 		O.adjustFireLoss(getFireLoss(), 0)
-		O.setBrainLoss(getBrainLoss(), 0)
+		O.adjustOrganLoss(ORGAN_SLOT_BRAIN, getOrganLoss(ORGAN_SLOT_BRAIN))
 		O.updatehealth()
 		O.radiation = radiation
 
@@ -248,8 +265,9 @@
 			mind.transfer_to(O)
 			var/datum/antagonist/changeling/changeling = O.mind.has_antag_datum(/datum/antagonist/changeling)
 			if(changeling)
-				for(var/obj/effect/proc_holder/changeling/humanform/HF in changeling.purchasedpowers)
+				for(var/datum/action/changeling/humanform/HF in changeling.purchasedpowers)
 					changeling.purchasedpowers -= HF
+					changeling.regain_powers()
 
 		for(var/X in internal_organs)
 			var/obj/item/organ/I = X
@@ -278,12 +296,26 @@
 					qdel(G) //we lose the organs in the missing limbs
 		qdel(BP)
 
+	//transfer stuns
+	if(tr_flags & TR_KEEPSTUNS)
+		O.Stun(AmountStun(), ignore_canstun = TRUE)
+		O.Knockdown(AmountKnockdown(), ignore_canstun = TRUE)
+		O.Immobilize(AmountImmobilized(), ignore_canstun = TRUE)
+		O.Paralyze(AmountParalyzed(), ignore_canstun = TRUE)
+		O.Unconscious(AmountUnconscious(), ignore_canstun = TRUE)
+		O.Sleeping(AmountSleeping(), ignore_canstun = TRUE)
+
+	//transfer reagents
+	if(tr_flags & TR_KEEPREAGENTS)
+		reagents.trans_to(O, reagents.total_volume)
+
 	if(mind)
 		mind.transfer_to(O)
 		var/datum/antagonist/changeling/changeling = O.mind.has_antag_datum(/datum/antagonist/changeling)
 		if(changeling)
-			for(var/obj/effect/proc_holder/changeling/humanform/HF in changeling.purchasedpowers)
+			for(var/datum/action/changeling/humanform/HF in changeling.purchasedpowers)
 				changeling.purchasedpowers -= HF
+				changeling.regain_powers()
 
 	O.a_intent = INTENT_HELP
 	if (tr_flags & TR_DEFAULTMSG)

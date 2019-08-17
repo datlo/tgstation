@@ -1,5 +1,5 @@
 /obj/item/melee/baton
-	name = "stunbaton"
+	name = "stun baton"
 	desc = "A stun baton for incapacitating people with."
 	icon_state = "stunbaton"
 	item_state = "baton"
@@ -12,7 +12,10 @@
 	attack_verb = list("beaten")
 	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 50, "bio" = 0, "rad" = 0, "fire" = 80, "acid" = 80)
 
-	var/stunforce = 140
+	var/cooldown_check = 0
+
+	var/cooldown = (2 SECONDS)
+	var/stunforce = 100
 	var/status = 0
 	var/obj/item/stock_parts/cell/cell
 	var/hitcost = 1000
@@ -30,7 +33,7 @@
 	. = ..()
 	if(preload_cell_type)
 		if(!ispath(preload_cell_type,/obj/item/stock_parts/cell))
-			log_world("### MAP WARNING, [src] at [AREACOORD(src)] had an invalid preload_cell_type: [preload_cell_type].")
+			log_mapping("[src] at [AREACOORD(src)] had an invalid preload_cell_type: [preload_cell_type].")
 		else
 			cell = new preload_cell_type(src)
 	update_icon()
@@ -58,18 +61,18 @@
 
 /obj/item/melee/baton/update_icon()
 	if(status)
-		icon_state = "[initial(name)]_active"
+		icon_state = "[initial(icon_state)]_active"
 	else if(!cell)
-		icon_state = "[initial(name)]_nocell"
+		icon_state = "[initial(icon_state)]_nocell"
 	else
-		icon_state = "[initial(name)]"
+		icon_state = "[initial(icon_state)]"
 
 /obj/item/melee/baton/examine(mob/user)
-	..()
+	. = ..()
 	if(cell)
-		to_chat(user, "<span class='notice'>\The [src] is [round(cell.percent())]% charged.</span>")
+		. += "<span class='notice'>\The [src] is [round(cell.percent())]% charged.</span>"
 	else
-		to_chat(user, "<span class='warning'>\The [src] does not have a power source installed.</span>")
+		. += "<span class='warning'>\The [src] does not have a power source installed.</span>"
 
 /obj/item/melee/baton/attackby(obj/item/W, mob/user, params)
 	if(istype(W, /obj/item/stock_parts/cell))
@@ -112,7 +115,7 @@
 	add_fingerprint(user)
 
 /obj/item/melee/baton/attack(mob/M, mob/living/carbon/human/user)
-	if(status && user.has_trait(TRAIT_CLUMSY) && prob(50))
+	if(status && HAS_TRAIT(user, TRAIT_CLUMSY) && prob(50))
 		user.visible_message("<span class='danger'>[user] accidentally hits [user.p_them()]self with [src]!</span>", \
 							"<span class='userdanger'>You accidentally hit yourself with [src]!</span>")
 		user.Paralyze(stunforce*3)
@@ -131,15 +134,19 @@
 
 	if(user.a_intent != INTENT_HARM)
 		if(status)
-			if(baton_stun(M, user))
-				user.do_attack_animation(M)
-				return
+			if(cooldown_check <= world.time)
+				if(baton_stun(M, user))
+					user.do_attack_animation(M)
+					return
+			else 
+				to_chat(user, "<span class='danger'>The baton is still charging!</span>")
 		else
 			M.visible_message("<span class='warning'>[user] has prodded [M] with [src]. Luckily it was off.</span>", \
 							"<span class='warning'>[user] has prodded you with [src]. Luckily it was off</span>")
 	else
 		if(status)
-			baton_stun(M, user)
+			if(cooldown_check <= world.time)
+				baton_stun(M, user)
 		..()
 
 
@@ -157,9 +164,16 @@
 		if(!deductcharge(hitcost))
 			return 0
 
-	L.Paralyze(stunforce)
+	/// After a target is hit, we do a chunk of stamina damage, along with other effects.
+	/// After a period of time, we then check to see what stun duration we give.
+	L.Jitter(20)
+	L.confused = max(8, L.confused)
 	L.apply_effect(EFFECT_STUTTER, stunforce)
+	L.adjustStaminaLoss(60)
+
 	SEND_SIGNAL(L, COMSIG_LIVING_MINOR_SHOCK)
+	addtimer(CALLBACK(src, .proc/apply_stun_effect_end, L), 2.5 SECONDS)
+
 	if(user)
 		L.lastattacker = user.real_name
 		L.lastattackerckey = user.ckey
@@ -173,8 +187,19 @@
 		var/mob/living/carbon/human/H = L
 		H.forcesay(GLOB.hit_appends)
 
+	cooldown_check = world.time + cooldown
 
 	return 1
+
+/// After the initial stun period, we check to see if the target needs to have the stun applied.
+/obj/item/melee/baton/proc/apply_stun_effect_end(mob/living/target)
+	var/trait_check = HAS_TRAIT(target, TRAIT_STUNRESISTANCE) //var since we check it in out to_chat as well as determine stun duration
+	if(trait_check)
+		target.Paralyze(stunforce * 0.1)
+	else
+		target.Paralyze(stunforce)
+	if(!target.IsParalyzed())
+		to_chat(target, "<span class='warning'>You muscles seize, making you collapse[trait_check ? ", but your body quickly recovers..." : "!"]</span>")
 
 /obj/item/melee/baton/emp_act(severity)
 	. = ..()
@@ -185,7 +210,7 @@
 /obj/item/melee/baton/cattleprod
 	name = "stunprod"
 	desc = "An improvised stun baton."
-	icon_state = "stunprod_nocell"
+	icon_state = "stunprod"
 	item_state = "prod"
 	lefthand_file = 'icons/mob/inhands/weapons/melee_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/weapons/melee_righthand.dmi'

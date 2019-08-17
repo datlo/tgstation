@@ -5,10 +5,10 @@
 	icon_state = "grievous"
 	health = 150
 	maxHealth = 150
-	baton_type = /obj/item/melee/transforming/energy/sword
+	baton_type = /obj/item/melee/transforming/energy/sword/saber
 	base_speed = 4 //he's a fast fucker
-	var/obj/item/weapon
 	var/block_chance = 50
+	weapon_force = 30
 
 
 /mob/living/simple_animal/bot/secbot/grievous/toy //A toy version of general beepsky!
@@ -17,11 +17,12 @@
 	health = 50
 	maxHealth = 50
 	baton_type = /obj/item/toy/sword
+	weapon_force = 0
 
 /mob/living/simple_animal/bot/secbot/grievous/bullet_act(obj/item/projectile/P)
 	visible_message("[src] deflects [P] with its energy swords!")
 	playsound(src, 'sound/weapons/blade1.ogg', 50, TRUE)
-	return FALSE
+	return BULLET_ACT_BLOCK
 
 /mob/living/simple_animal/bot/secbot/grievous/Crossed(atom/movable/AM)
 	..()
@@ -32,7 +33,6 @@
 
 /mob/living/simple_animal/bot/secbot/grievous/Initialize()
 	. = ..()
-	weapon = new baton_type(src)
 	weapon.attack_self(src)
 
 /mob/living/simple_animal/bot/secbot/grievous/Destroy()

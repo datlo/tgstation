@@ -38,8 +38,7 @@
 /obj/machinery/atmospherics/components/binary/dp_vent_pump/update_icon_nopipes()
 	cut_overlays()
 	if(showpipe)
-		var/image/cap = getpipeimage(icon, "dpvent_cap", dir)
-		PIPING_LAYER_SHIFT(cap, piping_layer)
+		var/image/cap = getpipeimage(icon, "dpvent_cap", dir, piping_layer = piping_layer)
 		add_overlay(cap)
 
 	if(!on || !is_operational())
@@ -168,13 +167,10 @@
 	if("set_external_pressure" in signal.data)
 		external_pressure_bound = CLAMP(text2num(signal.data["set_external_pressure"]),0,ONE_ATMOSPHERE*50)
 
-	if("status" in signal.data)
-		spawn(2)
-			broadcast_status()
-		return //do not update_icon
-	spawn(2)
-		broadcast_status()
-	update_icon()
+	addtimer(CALLBACK(src, .proc/broadcast_status), 2)
+
+	if(!("status" in signal.data)) //do not update_icon
+		update_icon()
 
 /obj/machinery/atmospherics/components/binary/dp_vent_pump/high_volume
 	name = "large dual-port air vent"

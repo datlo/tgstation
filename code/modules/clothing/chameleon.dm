@@ -60,7 +60,7 @@
 		to_chat(owner, "<span class='warning'>You shouldn't be able to toggle a camogear helmetmask if you're not wearing it</span>")
 	if(new_headgear)
 		// Force drop the item in the headslot, even though
-		// it's NODROP_1
+		// it's has TRAIT_NODROP
 		D.dropItemToGround(target, TRUE)
 		qdel(old_headgear)
 		// where is `SLOT_HEAD` defined? WHO KNOWS
@@ -100,8 +100,9 @@
 	var/outfit_type = outfit_options[selected]
 	if(!outfit_type)
 		return FALSE
-	var/datum/outfit/O = new outfit_type()
+	var/datum/outfit/job/O = new outfit_type()
 	var/list/outfit_types = O.get_chameleon_disguise_info()
+	var/datum/job/job_datum = SSjob.GetJobType(O.jobtype)
 
 	for(var/V in user.chameleon_item_actions)
 		var/datum/action/item_action/chameleon/change/A = V
@@ -109,12 +110,14 @@
 		for(var/T in outfit_types)
 			for(var/name in A.chameleon_list)
 				if(A.chameleon_list[name] == T)
+					A.apply_job_data(job_datum)
 					A.update_look(user, T)
 					outfit_types -= T
 					done = TRUE
 					break
 			if(done)
 				break
+
 	//hardsuit helmets/suit hoods
 	if(O.toggle_helmet && (ispath(O.suit, /obj/item/clothing/suit/space/hardsuit) || ispath(O.suit, /obj/item/clothing/suit/hooded)) && ishuman(user))
 		var/mob/living/carbon/human/H = user
@@ -246,6 +249,42 @@
 		STOP_PROCESSING(SSprocessing, src)
 		return
 	random_look(owner)
+
+/datum/action/item_action/chameleon/change/proc/apply_job_data(datum/job/job_datum)
+	return
+
+/datum/action/item_action/chameleon/change/id/update_item(obj/item/picked_item)
+	..()
+	var/obj/item/card/id/agent_card = target
+	if(istype(agent_card))
+		var/obj/item/card/id/copied_card = picked_item
+		if(istype(copied_card))
+			agent_card.uses_overlays = copied_card.uses_overlays
+			agent_card.id_type_name = copied_card.id_type_name
+		else
+			agent_card.uses_overlays = FALSE
+			agent_card.id_type_name = copied_card.name
+		agent_card.update_label()
+
+/datum/action/item_action/chameleon/change/id/apply_job_data(datum/job/job_datum)
+	..()
+	var/obj/item/card/id/agent_card = target
+	if(istype(agent_card) && istype(job_datum))
+		agent_card.assignment = job_datum.title
+
+/datum/action/item_action/chameleon/change/pda/update_item(obj/item/picked_item)
+	..()
+	var/obj/item/pda/agent_pda = target
+	if(istype(agent_pda))
+		agent_pda.update_label()
+		agent_pda.update_icon()
+
+/datum/action/item_action/chameleon/change/pda/apply_job_data(datum/job/job_datum)
+	..()
+	var/obj/item/pda/agent_pda = target
+	if(istype(agent_pda) && istype(job_datum))
+		agent_pda.ownjob = job_datum.title
+
 
 /obj/item/clothing/under/chameleon
 //starts off as black
@@ -405,12 +444,12 @@
 /obj/item/clothing/head/chameleon/drone
 	// The camohat, I mean, holographic hat projection, is part of the
 	// drone itself.
-	item_flags = NODROP
 	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 0, "acid" = 0)
 	// which means it offers no protection, it's just air and light
 
 /obj/item/clothing/head/chameleon/drone/Initialize()
 	. = ..()
+	ADD_TRAIT(src, TRAIT_NODROP, ABSTRACT_ITEM_TRAIT)
 	chameleon_action.random_look()
 	var/datum/action/item_action/chameleon/drone/togglehatmask/togglehatmask_action = new(src)
 	togglehatmask_action.UpdateButtonIcon()
@@ -459,13 +498,13 @@
 
 /obj/item/clothing/mask/chameleon/drone
 	//Same as the drone chameleon hat, undroppable and no protection
-	item_flags = NODROP
 	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 0, "acid" = 0)
 	// Can drones use the voice changer part? Let's not find out.
 	vchange = 0
 
 /obj/item/clothing/mask/chameleon/drone/Initialize()
 	. = ..()
+	ADD_TRAIT(src, TRAIT_NODROP, ABSTRACT_ITEM_TRAIT)
 	chameleon_action.random_look()
 	var/datum/action/item_action/chameleon/drone/togglehatmask/togglehatmask_action = new(src)
 	togglehatmask_action.UpdateButtonIcon()
@@ -549,7 +588,7 @@
 
 /obj/item/storage/belt/chameleon/ComponentInitialize()
 	. = ..()
-	GET_COMPONENT(STR, /datum/component/storage)
+	var/datum/component/storage/STR = GetComponent(/datum/component/storage)
 	STR.silent = TRUE
 
 /obj/item/storage/belt/chameleon/emp_act(severity)
@@ -585,7 +624,7 @@
 
 /obj/item/pda/chameleon
 	name = "PDA"
-	var/datum/action/item_action/chameleon/change/chameleon_action
+	var/datum/action/item_action/chameleon/change/pda/chameleon_action
 
 /obj/item/pda/chameleon/Initialize()
 	. = ..()

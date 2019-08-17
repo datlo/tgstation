@@ -6,13 +6,11 @@
 	name = "???"
 	id = "shadow"
 	sexes = 0
-	blacklisted = 1
-	ignored_by = list(/mob/living/simple_animal/hostile/faithless)
 	meat = /obj/item/reagent_containers/food/snacks/meat/slab/human/mutant/shadow
-	species_traits = list(NOBLOOD,NOEYES)
+	species_traits = list(NOBLOOD,NOEYESPRITES,NOFLASH)
 	inherent_traits = list(TRAIT_RADIMMUNE,TRAIT_VIRUSIMMUNE,TRAIT_NOBREATH)
-
-	dangerous_existence = 1
+	inherent_factions = list("faithless")
+	changesource_flags = MIRROR_BADMIN | WABBAJACK | MIRROR_PRIDE | MIRROR_MAGIC
 	mutanteyes = /obj/item/organ/eyes/night_vision
 
 
@@ -36,10 +34,9 @@
 	id = "nightmare"
 	limbs_id = "shadow"
 	burnmod = 1.5
-	blacklisted = TRUE
 	no_equip = list(SLOT_WEAR_MASK, SLOT_WEAR_SUIT, SLOT_GLOVES, SLOT_SHOES, SLOT_W_UNIFORM, SLOT_S_STORE)
-	species_traits = list(NOBLOOD,NO_UNDERWEAR,NO_DNA_COPY,NOTRANSSTING,NOEYES)
-	inherent_traits = list(TRAIT_RESISTCOLD,TRAIT_NOBREATH,TRAIT_RESISTHIGHPRESSURE,TRAIT_RESISTLOWPRESSURE,TRAIT_NOGUNS,TRAIT_RADIMMUNE,TRAIT_VIRUSIMMUNE,TRAIT_PIERCEIMMUNE,TRAIT_NODISMEMBER,TRAIT_NOHUNGER)
+	species_traits = list(NOBLOOD,NO_UNDERWEAR,NO_DNA_COPY,NOTRANSSTING,NOEYESPRITES,NOFLASH)
+	inherent_traits = list(TRAIT_RESISTCOLD,TRAIT_NOBREATH,TRAIT_RESISTHIGHPRESSURE,TRAIT_RESISTLOWPRESSURE,TRAIT_CHUNKYFINGERS,TRAIT_RADIMMUNE,TRAIT_VIRUSIMMUNE,TRAIT_PIERCEIMMUNE,TRAIT_NODISMEMBER,TRAIT_NOHUNGER)
 	mutanteyes = /obj/item/organ/eyes/night_vision/nightmare
 	mutant_organs = list(/obj/item/organ/heart/nightmare)
 	mutant_brain = /obj/item/organ/brain/nightmare
@@ -51,11 +48,7 @@
 	. = ..()
 	to_chat(C, "[info_text]")
 
-	C.real_name = "[pick(GLOB.nightmare_names)]"
-	C.name = C.real_name
-	if(C.mind)
-		C.mind.name = C.real_name
-	C.dna.real_name = C.real_name
+	C.fully_replace_character_name("[pick(GLOB.nightmare_names)]")
 
 /datum/species/shadow/nightmare/bullet_act(obj/item/projectile/P, mob/living/carbon/human/H)
 	var/turf/T = H.loc
@@ -64,8 +57,8 @@
 		if(light_amount < SHADOW_SPECIES_LIGHT_THRESHOLD)
 			H.visible_message("<span class='danger'>[H] dances in the shadows, evading [P]!</span>")
 			playsound(T, "bullet_miss", 75, 1)
-			return -1
-	return 0
+			return BULLET_ACT_FORCE_PIERCE
+	return ..()
 
 /datum/species/shadow/nightmare/check_roundstart_eligible()
 	return FALSE
@@ -102,6 +95,7 @@
 	color = "#1C1C1C"
 	var/respawn_progress = 0
 	var/obj/item/light_eater/blade
+	decay_factor = 0
 
 
 /obj/item/organ/heart/nightmare/attack(mob/M, mob/living/carbon/user, obj/target)
@@ -122,14 +116,12 @@
 	if(special != HEART_SPECIAL_SHADOWIFY)
 		blade = new/obj/item/light_eater
 		M.put_in_hands(blade)
-	START_PROCESSING(SSobj, src)
 
 /obj/item/organ/heart/nightmare/Remove(mob/living/carbon/M, special = 0)
-	STOP_PROCESSING(SSobj, src)
 	respawn_progress = 0
 	if(blade && special != HEART_SPECIAL_SHADOWIFY)
-		QDEL_NULL(blade)
 		M.visible_message("<span class='warning'>\The [blade] disintegrates!</span>")
+		QDEL_NULL(blade)
 	..()
 
 /obj/item/organ/heart/nightmare/Stop()
@@ -138,12 +130,10 @@
 /obj/item/organ/heart/nightmare/update_icon()
 	return //always beating visually
 
-/obj/item/organ/heart/nightmare/process()
-	if(QDELETED(owner) || owner.stat != DEAD)
-		respawn_progress = 0
+/obj/item/organ/heart/nightmare/on_death()
+	if(!owner)
 		return
 	var/turf/T = get_turf(owner)
-
 	if(istype(T))
 		var/light_amount = T.get_lumcount()
 		if(light_amount < SHADOW_SPECIES_LIGHT_THRESHOLD)
@@ -166,18 +156,20 @@
 
 /obj/item/light_eater
 	name = "light eater" //as opposed to heavy eater
+	icon = 'icons/obj/changeling_items.dmi'
 	icon_state = "arm_blade"
 	item_state = "arm_blade"
 	force = 25
 	armour_penetration = 35
 	lefthand_file = 'icons/mob/inhands/antag/changeling_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/antag/changeling_righthand.dmi'
-	item_flags = ABSTRACT | NODROP | DROPDEL
+	item_flags = ABSTRACT | DROPDEL
 	w_class = WEIGHT_CLASS_HUGE
 	sharpness = IS_SHARP
 
 /obj/item/light_eater/Initialize()
 	. = ..()
+	ADD_TRAIT(src, TRAIT_NODROP, HAND_REPLACEMENT_TRAIT)
 	AddComponent(/datum/component/butchering, 80, 70)
 
 /obj/item/light_eater/afterattack(atom/movable/AM, mob/user, proximity)

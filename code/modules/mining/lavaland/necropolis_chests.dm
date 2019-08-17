@@ -1,5 +1,7 @@
 //The chests dropped by mob spawner tendrils. Also contains associated loot.
 
+#define HIEROPHANT_CLUB_CARDINAL_DAMAGE 30
+
 
 /obj/structure/closet/crate/necropolis
 	name = "necropolis chest"
@@ -39,7 +41,7 @@
 		if(11)
 			new /obj/item/ship_in_a_bottle(src)
 		if(12)
-			new /obj/item/clothing/suit/space/hardsuit/ert/paranormal/beserker(src)
+			new /obj/item/clothing/suit/space/hardsuit/ert/paranormal/berserker(src)
 		if(13)
 			new /obj/item/jacobs_ladder(src)
 		if(14)
@@ -114,36 +116,36 @@
 	name = "Kinetic Accelerator Offensive Mining Explosion Mod"
 	desc = "A device which causes kinetic accelerators to fire AoE blasts that destroy rock and damage creatures."
 	id = "hyperaoemod"
-	materials = list(MAT_METAL = 7000, MAT_GLASS = 3000, MAT_SILVER = 3000, MAT_GOLD = 3000, MAT_DIAMOND = 4000)
+	materials = list(/datum/material/iron = 7000, /datum/material/glass = 3000, /datum/material/silver = 3000, /datum/material/gold = 3000, /datum/material/diamond = 4000)
 	build_path = /obj/item/borg/upgrade/modkit/aoe/turfs/andmobs
 
 /datum/design/unique_modkit/rapid_repeater
 	name = "Kinetic Accelerator Rapid Repeater Mod"
 	desc = "A device which greatly reduces a kinetic accelerator's cooldown on striking a living target or rock, but greatly increases its base cooldown."
 	id = "repeatermod"
-	materials = list(MAT_METAL = 5000, MAT_GLASS = 5000, MAT_URANIUM = 8000, MAT_BLUESPACE = 2000)
+	materials = list(/datum/material/iron = 5000, /datum/material/glass = 5000, /datum/material/uranium = 8000, /datum/material/bluespace = 2000)
 	build_path = /obj/item/borg/upgrade/modkit/cooldown/repeater
 
 /datum/design/unique_modkit/resonator_blast
 	name = "Kinetic Accelerator Resonator Blast Mod"
 	desc = "A device which causes kinetic accelerators to fire shots that leave and detonate resonator blasts."
 	id = "resonatormod"
-	materials = list(MAT_METAL = 5000, MAT_GLASS = 5000, MAT_SILVER = 5000, MAT_URANIUM = 5000)
+	materials = list(/datum/material/iron = 5000, /datum/material/glass = 5000, /datum/material/silver = 5000, /datum/material/uranium = 5000)
 	build_path = /obj/item/borg/upgrade/modkit/resonator_blasts
 
 /datum/design/unique_modkit/bounty
 	name = "Kinetic Accelerator Death Syphon Mod"
 	desc = "A device which causes kinetic accelerators to permanently gain damage against creature types killed with it."
 	id = "bountymod"
-	materials = list(MAT_METAL = 4000, MAT_SILVER = 4000, MAT_GOLD = 4000, MAT_BLUESPACE = 4000)
-	reagents_list = list("blood" = 40)
+	materials = list(/datum/material/iron = 4000, /datum/material/silver = 4000, /datum/material/gold = 4000, /datum/material/bluespace = 4000)
+	reagents_list = list(/datum/reagent/blood = 40)
 	build_path = /obj/item/borg/upgrade/modkit/bounty
 
 //Spooky special loot
 
 //Rod of Asclepius
 /obj/item/rod_of_asclepius
-	name = "Rod of Asclepius"
+	name = "\improper Rod of Asclepius"
 	desc = "A wooden rod about the size of your forearm with a snake carved around it, winding its way up the sides of the rod. Something about it seems to inspire in you the responsibilty and duty to help others."
 	icon = 'icons/obj/lavaland/artefacts.dmi'
 	icon_state = "asclepius_dormant"
@@ -189,7 +191,8 @@
 	activated()
 
 /obj/item/rod_of_asclepius/proc/activated()
-	item_flags = NODROP | DROPDEL
+	item_flags = DROPDEL
+	ADD_TRAIT(src, TRAIT_NODROP, CURSED_ITEM_TRAIT)
 	desc = "A short wooden rod with a mystical snake inseparably gripping itself and the rod to your forearm. It flows with a healing energy that disperses amongst yourself and those around you. "
 	icon_state = "asclepius_active"
 	activated = TRUE
@@ -222,9 +225,9 @@
 	to_chat(user, "<span class='warning'>You feel your life being drained by the pendant...</span>")
 	if(do_after(user, 40, target = user))
 		to_chat(user, "<span class='notice'>Your lifeforce is now linked to the pendant! You feel like removing it would kill you, and yet you instinctively know that until then, you won't die.</span>")
-		user.add_trait(TRAIT_NODEATH, "memento_mori")
-		user.add_trait(TRAIT_NOHARDCRIT, "memento_mori")
-		user.add_trait(TRAIT_NOCRITDAMAGE, "memento_mori")
+		ADD_TRAIT(user, TRAIT_NODEATH, "memento_mori")
+		ADD_TRAIT(user, TRAIT_NOHARDCRIT, "memento_mori")
+		ADD_TRAIT(user, TRAIT_NOCRITDAMAGE, "memento_mori")
 		icon_state = "memento_mori_active"
 		active_owner = user
 
@@ -439,6 +442,20 @@
 	qdel(chain)
 	return ..()
 
+//just a nerfed version of the real thing for the bounty hunters.
+/obj/item/gun/magic/hook/bounty
+	name = "hook"
+	ammo_type = /obj/item/ammo_casing/magic/hook/bounty
+
+/obj/item/gun/magic/hook/bounty/shoot_with_empty_chamber(mob/living/user)
+	to_chat(user, "<span class='warning'>The [src] isn't ready to fire yet!</span>")
+
+/obj/item/ammo_casing/magic/hook/bounty
+	projectile_type = /obj/item/projectile/hook/bounty
+
+/obj/item/projectile/hook/bounty
+	damage = 0
+	paralyze = 20
 
 //Immortality Talisman
 /obj/item/immortality_talisman
@@ -452,7 +469,7 @@
 
 /obj/item/immortality_talisman/Initialize()
 	. = ..()
-	AddComponent(/datum/component/anti_magic, TRUE, TRUE)
+	AddComponent(/datum/component/anti_magic, TRUE, TRUE, TRUE)
 
 /datum/action/item_action/immortality
 	name = "Immortality"
@@ -461,30 +478,45 @@
 	if(cooldown < world.time)
 		SSblackbox.record_feedback("amount", "immortality_talisman_uses", 1)
 		cooldown = world.time + 600
-		user.visible_message("<span class='danger'>[user] vanishes from reality, leaving a hole in [user.p_their()] place!</span>")
-		var/obj/effect/immortality_talisman/Z = new(get_turf(src.loc))
-		Z.name = "hole in reality"
-		Z.desc = "It's shaped an awful lot like [user.name]."
-		Z.setDir(user.dir)
-		user.forceMove(Z)
-		user.notransform = 1
-		user.status_flags |= GODMODE
-		addtimer(CALLBACK(src, .proc/return_to_reality, user, Z), 100)
+		new /obj/effect/immortality_talisman(get_turf(user), user)
 	else
 		to_chat(user, "<span class='warning'>[src] is not ready yet!</span>")
 
-/obj/item/immortality_talisman/proc/return_to_reality(mob/user, obj/effect/immortality_talisman/Z)
-	user.status_flags &= ~GODMODE
-	user.notransform = 0
-	user.forceMove(get_turf(Z))
-	user.visible_message("<span class='danger'>[user] pops back into reality!</span>")
-	Z.can_destroy = TRUE
-	qdel(Z)
-
 /obj/effect/immortality_talisman
+	name = "hole in reality"
+	desc = "It's shaped an awful lot like a person."
 	icon_state = "blank"
 	icon = 'icons/effects/effects.dmi'
-	var/can_destroy = FALSE
+	var/vanish_description = "vanishes from reality"
+	var/can_destroy = TRUE
+
+/obj/effect/immortality_talisman/Initialize(mapload, mob/new_user)
+	. = ..()
+	if(new_user)
+		vanish(new_user)
+
+/obj/effect/immortality_talisman/proc/vanish(mob/user)
+	user.visible_message("<span class='danger'>[user] [vanish_description], leaving a hole in [user.p_their()] place!</span>")
+
+	desc = "It's shaped an awful lot like [user.name]."
+	setDir(user.dir)
+
+	user.forceMove(src)
+	user.notransform = TRUE
+	user.status_flags |= GODMODE
+
+	can_destroy = FALSE
+
+	addtimer(CALLBACK(src, .proc/unvanish, user), 10 SECONDS)
+
+/obj/effect/immortality_talisman/proc/unvanish(mob/user)
+	user.status_flags &= ~GODMODE
+	user.notransform = FALSE
+	user.forceMove(get_turf(src))
+
+	user.visible_message("<span class='danger'>[user] pops back into reality!</span>")
+	can_destroy = TRUE
+	qdel(src)
 
 /obj/effect/immortality_talisman/attackby()
 	return
@@ -501,6 +533,8 @@
 	else
 		. = ..()
 
+/obj/effect/immortality_talisman/void
+	vanish_description = "is dragged into the void"
 
 //Shared Bag
 
@@ -559,7 +593,7 @@
 /obj/item/reagent_containers/glass/bottle/potion/flight
 	name = "strange elixir"
 	desc = "A flask with an almost-holy aura emitting from it. The label on the bottle says: 'erqo'hyy tvi'rf lbh jv'atf'."
-	list_reagents = list("flightpotion" = 5)
+	list_reagents = list(/datum/reagent/flightpotion = 5)
 
 /obj/item/reagent_containers/glass/bottle/potion/update_icon()
 	if(reagents.total_volume)
@@ -569,7 +603,6 @@
 
 /datum/reagent/flightpotion
 	name = "Flight Potion"
-	id = "flightpotion"
 	description = "Strange mutagenic compound of unknown origins."
 	reagent_state = LIQUID
 	color = "#FFEBEB"
@@ -642,12 +675,13 @@
 	nemesis_factions = list("mining", "boss")
 	var/transform_cooldown
 	var/swiping = FALSE
+	var/bleed_stacks_per_hit = 3
 
 /obj/item/melee/transforming/cleaving_saw/examine(mob/user)
-	..()
-	to_chat(user, "<span class='notice'>It is [active ? "open, and will cleave enemies in a wide arc":"closed, and can be used for rapid consecutive attacks that cause beastly enemies to bleed"].<br>\
-	Both modes will build up existing bleed effects, doing a burst of high damage if the bleed is built up high enough.<br>\
-	Transforming it immediately after an attack causes the next attack to come out faster.</span>")
+	. = ..()
+	. += "<span class='notice'>It is [active ? "open, will cleave enemies in a wide arc and deal additional damage to fauna":"closed, and can be used for rapid consecutive attacks that cause fauna to bleed"].\n"+\
+	"Both modes will build up existing bleed effects, doing a burst of high damage if the bleed is built up high enough.\n"+\
+	"Transforming it immediately after an attack causes the next attack to come out faster.</span>"
 
 /obj/item/melee/transforming/cleaving_saw/suicide_act(mob/user)
 	user.visible_message("<span class='suicide'>[user] is [active ? "closing [src] on [user.p_their()] neck" : "opening [src] into [user.p_their()] chest"]! It looks like [user.p_theyre()] trying to commit suicide!</span>")
@@ -666,13 +700,13 @@
 /obj/item/melee/transforming/cleaving_saw/transform_messages(mob/living/user, supress_message_text)
 	if(!supress_message_text)
 		if(active)
-			to_chat(user, "<span class='notice'>You open [src]. It will now cleave enemies in a wide arc.</span>")
+			to_chat(user, "<span class='notice'>You open [src]. It will now cleave enemies in a wide arc and deal additional damage to fauna.</span>")
 		else
-			to_chat(user, "<span class='notice'>You close [src]. It will now attack rapidly and cause beastly enemies to bleed.</span>")
+			to_chat(user, "<span class='notice'>You close [src]. It will now attack rapidly and cause fauna to bleed.</span>")
 	playsound(user, 'sound/magic/clockwork/fellowship_armory.ogg', 35, TRUE, frequency = 90000 - (active * 30000))
 
 /obj/item/melee/transforming/cleaving_saw/clumsy_transform_effect(mob/living/user)
-	if(user.has_trait(TRAIT_CLUMSY) && prob(50))
+	if(HAS_TRAIT(user, TRAIT_CLUMSY) && prob(50))
 		to_chat(user, "<span class='warning'>You accidentally cut yourself with [src], like a doofus!</span>")
 		user.take_bodypart_damage(10)
 
@@ -682,12 +716,11 @@
 		user.changeNext_move(CLICK_CD_MELEE * 0.5) //when closed, it attacks very rapidly
 
 /obj/item/melee/transforming/cleaving_saw/nemesis_effects(mob/living/user, mob/living/target)
-	var/datum/status_effect/saw_bleed/B = target.has_status_effect(STATUS_EFFECT_SAWBLEED)
+	var/datum/status_effect/stacking/saw_bleed/B = target.has_status_effect(STATUS_EFFECT_SAWBLEED)
 	if(!B)
-		if(!active) //This isn't in the above if-check so that the else doesn't care about active
-			target.apply_status_effect(STATUS_EFFECT_SAWBLEED)
+		target.apply_status_effect(STATUS_EFFECT_SAWBLEED,bleed_stacks_per_hit)
 	else
-		B.add_bleed(B.bleed_buildup)
+		B.add_stacks(bleed_stacks_per_hit)
 
 /obj/item/melee/transforming/cleaving_saw/attack(mob/living/target, mob/living/carbon/human/user)
 	if(!active || swiping || !target.density || get_turf(target) == get_turf(user))
@@ -767,13 +800,13 @@
 
 /obj/item/melee/ghost_sword/attack_self(mob/user)
 	if(summon_cooldown > world.time)
-		to_chat(user, "You just recently called out for aid. You don't want to annoy the spirits.")
+		to_chat(user, "<span class='warning'>You just recently called out for aid. You don't want to annoy the spirits!</span>")
 		return
-	to_chat(user, "You call out for aid, attempting to summon spirits to your side.")
+	to_chat(user, "<span class='notice'>You call out for aid, attempting to summon spirits to your side.</span>")
 
 	notify_ghosts("[user] is raising [user.p_their()] [src], calling for your help!",
 		enter_link="<a href=?src=[REF(src)];orbit=1>(Click to help)</a>",
-		source = user, action=NOTIFY_ORBIT, ignore_key = POLL_IGNORE_SPECTRAL_BLADE)
+		source = user, action=NOTIFY_ORBIT, ignore_key = POLL_IGNORE_SPECTRAL_BLADE, header = "Spectral blade")
 
 	summon_cooldown = world.time + 600
 
@@ -863,7 +896,7 @@
 /datum/disease/transformation/dragon
 	name = "dragon transformation"
 	cure_text = "nothing"
-	cures = list("adminordrazine")
+	cures = list(/datum/reagent/medicine/adminordrazine)
 	agent = "dragon's blood"
 	desc = "What do dragons have to do with Space Station 13?"
 	stage_prob = 20
@@ -1031,6 +1064,11 @@
 /obj/structure/closet/crate/necropolis/colossus
 	name = "colossus chest"
 
+/obj/structure/closet/crate/necropolis/colossus/bullet_act(obj/item/projectile/P)
+	if(istype(P, /obj/item/projectile/colossus))
+		return BULLET_ACT_FORCE_PIERCE
+	return ..()
+
 /obj/structure/closet/crate/necropolis/colossus/PopulateContents()
 	var/list/choices = subtypesof(/obj/machinery/anomalous_crystal)
 	var/random_crystal = pick(choices)
@@ -1072,8 +1110,8 @@
 	var/friendly_fire_check = FALSE //if the blasts we make will consider our faction against the faction of hit targets
 
 /obj/item/hierophant_club/examine(mob/user)
-	..()
-	to_chat(user, "<span class='hierophant_warning'>The[beacon ? " beacon is not currently":"re is a beacon"] attached.</span>")
+	. = ..()
+	. += "<span class='hierophant_warning'>The[beacon ? " beacon is not currently":"re is a beacon"] attached.</span>"
 
 /obj/item/hierophant_club/suicide_act(mob/living/user)
 	say("Xverwpsgexmrk...", forced = "hierophant club suicide")
@@ -1281,7 +1319,9 @@
 	new /obj/effect/temp_visual/hierophant/telegraph/cardinal(T, user)
 	playsound(T,'sound/effects/bin_close.ogg', 200, 1)
 	sleep(2)
-	new /obj/effect/temp_visual/hierophant/blast(T, user, friendly_fire_check)
+	var/obj/effect/temp_visual/hierophant/blast/B = new(T, user, friendly_fire_check)
+	B.damage = HIEROPHANT_CLUB_CARDINAL_DAMAGE
+	B.monster_damage_boost = FALSE
 	for(var/d in GLOB.cardinals)
 		INVOKE_ASYNC(src, .proc/blast_wall, T, d, user)
 
@@ -1295,7 +1335,7 @@
 		if(!J)
 			return
 		var/obj/effect/temp_visual/hierophant/blast/B = new(J, user, friendly_fire_check)
-		B.damage = 30
+		B.damage = HIEROPHANT_CLUB_CARDINAL_DAMAGE
 		B.monster_damage_boost = FALSE
 		previousturf = J
 		J = get_step(previousturf, dir)

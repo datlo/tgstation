@@ -20,14 +20,14 @@
 	var/attachment_holes = TRUE
 
 /turf/open/floor/plating/examine(mob/user)
-	..()
+	. = ..()
 	if(broken || burnt)
-		to_chat(user, "<span class='notice'>It looks like the dents could be <i>welded</i> smooth.</span>")
+		. += "<span class='notice'>It looks like the dents could be <i>welded</i> smooth.</span>"
 		return
 	if(attachment_holes)
-		to_chat(user, "<span class='notice'>There are a few attachment holes for a new <i>tile</i> or reinforcement <i>rods</i>.</span>")
+		. += "<span class='notice'>There are a few attachment holes for a new <i>tile</i> or reinforcement <i>rods</i>.</span>"
 	else
-		to_chat(user, "<span class='notice'>You might be able to build ontop of it with some <i>tiles</i>...</span>")
+		. += "<span class='notice'>You might be able to build ontop of it with some <i>tiles</i>...</span>"
 
 /turf/open/floor/plating/Initialize()
 	if (!broken_states)
@@ -86,6 +86,7 @@
 			to_chat(user, "<span class='warning'>This section is too damaged to support a tile! Use a welder to fix the damage.</span>")
 
 /turf/open/floor/plating/welder_act(mob/living/user, obj/item/I)
+	..()
 	if((broken || burnt) && I.use_tool(src, user, 0, volume=80))
 		to_chat(user, "<span class='danger'>You fix some dents on the broken plating.</span>")
 		icon_state = icon_plating
@@ -129,9 +130,20 @@
 		else
 			to_chat(user, "<span class='danger'>You hit [src], to no effect!</span>")
 
+/turf/open/floor/plating/foam/rcd_vals(mob/user, obj/item/construction/rcd/the_rcd)
+	if(the_rcd.mode == RCD_FLOORWALL)
+		return list("mode" = RCD_FLOORWALL, "delay" = 0, "cost" = 1)
+
+/turf/open/floor/plating/foam/rcd_act(mob/user, obj/item/construction/rcd/the_rcd, passed_mode)
+	if(passed_mode == RCD_FLOORWALL)
+		to_chat(user, "<span class='notice'>You build a floor.</span>")
+		ChangeTurf(/turf/open/floor/plating)
+		return TRUE
+	return FALSE
+
 /turf/open/floor/plating/foam/ex_act()
 	..()
 	ScrapeAway()
 
-/turf/open/floor/plating/foam/tool_act(mob/living/user, obj/tool/I, tool_type)
+/turf/open/floor/plating/foam/tool_act(mob/living/user, obj/item/I, tool_type)
 	return

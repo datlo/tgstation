@@ -1,5 +1,6 @@
 /datum/martial_art/mushpunch
 	name = "Mushroom Punch"
+	id = MARTIALART_MUSHPUNCH
 
 /datum/martial_art/mushpunch/harm_act(mob/living/carbon/human/A, mob/living/carbon/human/D)
 	var/atk_verb
@@ -34,4 +35,5 @@
 	var/datum/martial_art/mushpunch/mush = new(null)
 	mush.teach(user)
 	qdel(src)
-	visible_message("<span class='warning'>[user] devours [src].</span>")
+	visible_message("<span class='warning'>[user] devours [src].</span>", \
+					"<span class='notice'>You devour [src].</span>")

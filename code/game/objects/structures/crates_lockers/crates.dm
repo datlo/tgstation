@@ -15,8 +15,8 @@
 	delivery_icon = "deliverycrate"
 	var/obj/item/paper/fluff/jobs/cargo/manifest/manifest
 
-/obj/structure/closet/crate/New()
-	..()
+/obj/structure/closet/crate/Initialize()
+	. = ..()
 	if(icon_state == "[initial(icon_state)]open")
 		opened = TRUE
 	update_icon()
@@ -92,6 +92,27 @@
 	desc = "A freezer."
 	name = "freezer"
 	icon_state = "freezer"
+
+//Snowflake organ freezer code
+//Order is important, since we check source, we need to do the check whenever we have all the organs in the crate
+
+/obj/structure/closet/crate/freezer/open()
+	recursive_organ_check(src)
+	..()
+
+/obj/structure/closet/crate/freezer/close()
+	..()
+	recursive_organ_check(src)
+
+/obj/structure/closet/crate/freezer/Destroy()
+	recursive_organ_check(src)
+	..()
+
+/obj/structure/closet/crate/freezer/Initialize()
+	. = ..()
+	recursive_organ_check(src)
+
+
 
 /obj/structure/closet/crate/freezer/blood
 	name = "blood freezer"

@@ -151,7 +151,7 @@
 	desc = "You get the feeling that you shouldn't be standing here."
 	clockwork_desc = "A sigil that will soon erupt and smite any unenlightened nearby."
 	icon = 'icons/effects/96x96.dmi'
-	icon_state = ""
+	icon_state = "transparent"
 	pixel_x = -32
 	pixel_y = -32
 	layer = BELOW_MOB_LAYER
@@ -190,8 +190,8 @@
 	for(var/mob/living/L in range(1, src))
 		if(is_servant_of_ratvar(L))
 			continue
-		if(L.anti_magic_check())
-			var/atom/I = L.anti_magic_check()
+		var/atom/I = L.anti_magic_check()
+		if(I)
 			if(isitem(I))
 				L.visible_message("<span class='warning'>Strange energy flows into [L]'s [I.name]!</span>", \
 				"<span class='userdanger'>Your [I.name] shields you from [src]!</span>")

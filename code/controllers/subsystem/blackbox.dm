@@ -21,6 +21,7 @@ SUBSYSTEM_DEF(blackbox)
 	triggertime = world.time
 	record_feedback("amount", "random_seed", Master.random_seed)
 	record_feedback("amount", "dm_version", DM_VERSION)
+	record_feedback("amount", "dm_build", DM_BUILD)
 	record_feedback("amount", "byond_version", world.byond_version)
 	record_feedback("amount", "byond_build", world.byond_build)
 	. = ..()
@@ -295,7 +296,7 @@ Versioning
 	var/lakey = L.lastattackerckey
 	var/sqlbrute = L.getBruteLoss()
 	var/sqlfire = L.getFireLoss()
-	var/sqlbrain = L.getBrainLoss()
+	var/sqlbrain = L.getOrganLoss(ORGAN_SLOT_BRAIN) || BRAIN_DAMAGE_DEATH //getOrganLoss returns null without a brain but a value is required for this column
 	var/sqloxy = L.getOxyLoss()
 	var/sqltox = L.getToxLoss()
 	var/sqlclone = L.getCloneLoss()

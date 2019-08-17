@@ -121,15 +121,17 @@
 					var/mob/M = A
 					if(M.mob_negates_gravity())
 						continue
-				spawn(0)
-					var/iter = 5-get_dist(A,target)
-					for(var/i=0 to iter)
-						step_away(A,target)
-						sleep(2)
+				INVOKE_ASYNC(src, .proc/do_scatter, A, target)
+
 			var/turf/T = get_turf(target)
 			log_game("[key_name(chassis.occupant)] used a Gravitational Catapult repulse wave on [AREACOORD(T)]")
 			return TRUE
 
+/obj/item/mecha_parts/mecha_equipment/gravcatapult/proc/do_scatter(atom/movable/A, atom/movable/target)
+	var/iter = 5-get_dist(A,target)
+	for(var/i in 0 to iter)
+		step_away(A,target)
+		sleep(2)
 
 /obj/item/mecha_parts/mecha_equipment/gravcatapult/get_equip_info()
 	return "[..()] [mode==1?"([locked||"Nothing"])":null] \[<a href='?src=[REF(src)];mode=1'>S</a>|<a href='?src=[REF(src)];mode=2'>P</a>\]"
@@ -293,12 +295,12 @@
 	if(equip_ready) //disabled
 		return
 	var/area/A = get_area(chassis)
-	var/pow_chan = get_power_channel(A)
+	var/pow_chan = GET_MUTATION_POWER_channel(A)
 	if(pow_chan)
 		return 1000 //making magic
 
 
-/obj/item/mecha_parts/mecha_equipment/tesla_energy_relay/proc/get_power_channel(var/area/A)
+/obj/item/mecha_parts/mecha_equipment/tesla_energy_relay/proc/GET_MUTATION_POWER_channel(var/area/A)
 	var/pow_chan
 	if(A)
 		for(var/c in use_channels)
@@ -424,25 +426,6 @@
 /obj/item/mecha_parts/mecha_equipment/generator/attackby(weapon,mob/user, params)
 	load_fuel(weapon)
 
-/obj/item/mecha_parts/mecha_equipment/generator/critfail()
-	..()
-	var/turf/open/T = get_turf(src)
-	if(!istype(T))
-		return
-	var/datum/gas_mixture/GM = new
-	GM.add_gas(/datum/gas/plasma)
-	if(prob(10))
-		GM.gases[/datum/gas/plasma][MOLES] += 100
-		GM.temperature = 1500+T0C //should be enough to start a fire
-		T.visible_message("[src] suddenly disgorges a cloud of heated plasma.")
-		qdel(src)
-	else
-		GM.gases[/datum/gas/plasma][MOLES] += 5
-		GM.temperature = istype(T) ? T.air.return_temperature() : T20C
-		T.visible_message("[src] suddenly disgorges a cloud of plasma.")
-	T.assume_air(GM)
-	return
-
 /obj/item/mecha_parts/mecha_equipment/generator/process()
 	if(!chassis)
 		STOP_PROCESSING(SSobj, src)
@@ -481,9 +464,6 @@
 
 /obj/item/mecha_parts/mecha_equipment/generator/nuclear/generator_init()
 	fuel = new /obj/item/stack/sheet/mineral/uranium(src, 0)
-
-/obj/item/mecha_parts/mecha_equipment/generator/nuclear/critfail()
-	return
 
 /obj/item/mecha_parts/mecha_equipment/generator/nuclear/process()
 	if(..())

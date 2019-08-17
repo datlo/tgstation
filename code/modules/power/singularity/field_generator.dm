@@ -106,10 +106,12 @@ field_generator power level display
 			state = FG_UNSECURED
 
 /obj/machinery/field/generator/wrench_act(mob/living/user, obj/item/I)
+	..()
 	default_unfasten_wrench(user, I)
 	return TRUE
 
 /obj/machinery/field/generator/welder_act(mob/living/user, obj/item/I)
+	. = ..()
 	if(active)
 		to_chat(user, "<span class='warning'>[src] needs to be off!</span>")
 		return TRUE
@@ -161,7 +163,7 @@ field_generator power level display
 	if(Proj.flag != "bullet")
 		power = min(power + Proj.damage, field_generator_max_power)
 		check_power_level()
-	..()
+	. = ..()
 
 
 /obj/machinery/field/generator/Destroy()
@@ -335,8 +337,9 @@ field_generator power level display
 					var/turf/T = get_turf(src)
 					message_admins("A singulo exists and a containment field has failed at [ADMIN_VERBOSEJMP(T)].")
 					investigate_log("has <font color='red'>failed</font> whilst a singulo exists at [AREACOORD(T)].", INVESTIGATE_SINGULO)
+					notify_ghosts("IT'S LOOSE", source = src, action = NOTIFY_ORBIT, flashwindow = FALSE, ghost_sound = 'sound/machines/warning-buzzer.ogg', header = "IT'S LOOSE", notify_volume = 75)
 			O.last_warning = world.time
-	
+
 	move_resist = initial(move_resist)
 
 /obj/machinery/field/generator/shock(mob/living/user)

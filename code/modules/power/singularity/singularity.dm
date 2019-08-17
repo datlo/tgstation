@@ -113,7 +113,8 @@
 
 
 /obj/singularity/bullet_act(obj/item/projectile/P)
-	return 0 //Will there be an impact? Who knows.  Will we see it? No.
+	qdel(P)
+	return BULLET_ACT_HIT //Will there be an impact? Who knows.  Will we see it? No.
 
 
 /obj/singularity/Bump(atom/A)
@@ -383,8 +384,8 @@
 		var/obj/machinery/field/generator/G = locate(/obj/machinery/field/generator) in T
 		if(G && G.active)
 			return 0
-	else if(locate(/obj/machinery/shieldwallgen) in T)
-		var/obj/machinery/shieldwallgen/S = locate(/obj/machinery/shieldwallgen) in T
+	else if(locate(/obj/machinery/power/shieldwallgen) in T)
+		var/obj/machinery/power/shieldwallgen/S = locate(/obj/machinery/power/shieldwallgen) in T
 		if(S && S.active)
 			return 0
 	return 1

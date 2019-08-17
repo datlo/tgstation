@@ -13,7 +13,7 @@
 
 /obj/effect/decal/cleanable/ash/Initialize()
 	. = ..()
-	reagents.add_reagent("ash", 30)
+	reagents.add_reagent(/datum/reagent/ash, 30)
 	pixel_x = rand(-5, 5)
 	pixel_y = rand(-5, 5)
 
@@ -27,7 +27,7 @@
 
 /obj/effect/decal/cleanable/ash/large/Initialize()
 	. = ..()
-	reagents.add_reagent("ash", 30) //double the amount of ash.
+	reagents.add_reagent(/datum/reagent/ash, 30) //double the amount of ash.
 
 /obj/effect/decal/cleanable/glass
 	name = "tiny shards"
@@ -74,15 +74,17 @@
 /obj/effect/decal/cleanable/greenglow
 	name = "glowing goo"
 	desc = "Jeez. I hope that's not for lunch."
-	light_color = LIGHT_COLOR_GREEN
 	icon_state = "greenglow"
-
-/obj/effect/decal/cleanable/greenglow/Initialize(mapload)
-	. = ..()
-	set_light(1)
+	light_power = 3
+	light_range = 2
+	light_color = LIGHT_COLOR_GREEN
 
 /obj/effect/decal/cleanable/greenglow/ex_act()
 	return
+
+/obj/effect/decal/cleanable/greenglow/filled/Initialize()
+	. = ..()
+	reagents.add_reagent(pick(/datum/reagent/uranium, /datum/reagent/uranium/radium), 5)
 
 /obj/effect/decal/cleanable/cobweb
 	name = "cobweb"
@@ -130,7 +132,7 @@
 						var/datum/reagent/consumable/nutri_check = R
 						if(nutri_check.nutriment_factor >0)
 							H.adjust_nutrition(nutri_check.nutriment_factor * nutri_check.volume)
-							reagents.remove_reagent(nutri_check.id,nutri_check.volume)
+							reagents.remove_reagent(nutri_check.type,nutri_check.volume)
 			reagents.trans_to(H, reagents.total_volume, transfered_by = user)
 			qdel(src)
 
@@ -198,3 +200,10 @@
 	icon = 'icons/effects/blood.dmi'
 	icon_state = "xfloor1"
 	random_icon_states = list("xfloor1", "xfloor2", "xfloor3", "xfloor4", "xfloor5", "xfloor6", "xfloor7")
+
+/obj/effect/decal/cleanable/confetti
+	name = "confetti"
+	desc = "Tiny bits of colored paper thrown about for the janitor to enjoy!"
+	icon = 'icons/effects/confetti_and_decor.dmi'
+	icon_state = "confetti"
+	mouse_opacity = MOUSE_OPACITY_TRANSPARENT //the confetti itself might be annoying enough

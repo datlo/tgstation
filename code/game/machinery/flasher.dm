@@ -34,6 +34,9 @@
 	else
 		bulb = new(src)
 
+/obj/machinery/flasher/connect_to_shuttle(obj/docking_port/mobile/port, obj/docking_port/stationary/dock, idnum, override=FALSE)
+	id = "[idnum][id]"
+
 /obj/machinery/flasher/Destroy()
 	QDEL_NULL(bulb)
 	return ..()
@@ -41,7 +44,7 @@
 /obj/machinery/flasher/power_change()
 	if (powered() && anchored && bulb)
 		stat &= ~NOPOWER
-		if(bulb.crit_fail)
+		if(bulb.burnt_out)
 			icon_state = "[base_state]1-p"
 		else
 			icon_state = "[base_state]1"
@@ -96,7 +99,7 @@
 	if (!powered() || !bulb)
 		return
 
-	if (bulb.crit_fail || (last_flash && world.time < src.last_flash + 150))
+	if (bulb.burnt_out || (last_flash && world.time < src.last_flash + 150))
 		return
 
 	if(!bulb.flash_recharge(30)) //Bulb can burn out if it's used too often too fast
@@ -196,8 +199,8 @@
 	var/id = null
 
 /obj/item/wallframe/flasher/examine(mob/user)
-	..()
-	to_chat(user, "<span class='notice'>Its channel ID is '[id]'.</span>")
+	. = ..()
+	. += "<span class='notice'>Its channel ID is '[id]'.</span>"
 
 /obj/item/wallframe/flasher/after_attach(var/obj/O)
 	..()

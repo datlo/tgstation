@@ -49,7 +49,9 @@
 	var/miming = 0 // Mime's vow of silence
 	var/list/antag_datums
 	var/antag_hud_icon_state = null //this mind's ANTAG_HUD should have this icon_state
-	var/datum/atom_hud/antag/antag_hud = null //this mind's antag HUD
+	var/team_antag_hud_icon_state = null //this mind's ANTAG_HUD should have this icon_state
+	var/datum/atom_hud/antag/antag_hud = null //this mind's global antag HUD
+	var/datum/atom_hud/antag/team_antag_hud = null //this mind's antag HUD
 	var/damnation_type = 0
 	var/datum/mind/soulOwner //who owns the soul.  Under normal circumstances, this will point to src
 	var/hasSoul = TRUE // If false, renders the character unable to sell their soul.
@@ -64,6 +66,8 @@
 
 	var/force_escaped = FALSE  // Set by Into The Sunset command of the shuttle manipulator
 
+	var/list/learned_recipes //List of learned recipe TYPES.
+
 /datum/mind/New(var/key)
 	src.key = key
 	soulOwner = src
@@ -72,11 +76,7 @@
 /datum/mind/Destroy()
 	SSticker.minds -= src
 	if(islist(antag_datums))
-		for(var/i in antag_datums)
-			var/datum/antagonist/antag_datum = i
-			if(antag_datum.delete_on_mind_deletion)
-				qdel(i)
-		antag_datums = null
+		QDEL_LIST(antag_datums)
 	return ..()
 
 /datum/mind/proc/get_language_holder()
@@ -105,7 +105,8 @@
 	if(new_character.mind)								//disassociate any mind currently in our new body's mind variable
 		new_character.mind.current = null
 
-	var/datum/atom_hud/antag/hud_to_transfer = antag_hud//we need this because leave_hud() will clear this list
+	var/datum/atom_hud/antag/global_hud_to_transfer = antag_hud //we need these because leave_hud() will clear this list
+	var/datum/atom_hud/antag/team_hud_to_transfer = team_antag_hud
 	var/mob/living/old_current = current
 	if(current)
 		current.transfer_observers_to(new_character)	//transfer anyone observing the old character to the new one
@@ -117,7 +118,7 @@
 	if(iscarbon(new_character))
 		var/mob/living/carbon/C = new_character
 		C.last_mind = src
-	transfer_antag_huds(hud_to_transfer)				//inherit the antag HUD
+	transfer_antag_huds(global_hud_to_transfer, team_hud_to_transfer)				//inherit the antag HUD
 	transfer_actions(new_character)
 	transfer_martial_arts(new_character)
 	RegisterSignal(new_character, COMSIG_MOB_DEATH, .proc/set_death_time)
@@ -128,6 +129,9 @@
 	last_death = world.time
 
 /datum/mind/proc/store_memory(new_text)
+	var/newlength = length(memory) + length(new_text)
+	if (newlength > MAX_MESSAGE_LEN * 100)
+		memory = copytext(memory, -newlength-MAX_MESSAGE_LEN * 100)
 	memory += "[new_text]<BR>"
 
 /datum/mind/proc/wipe_memory()
@@ -159,6 +163,7 @@
 	if(antag_team)
 		antag_team.add_member(src)
 	A.on_gain()
+	log_game("[key_name(src)] has gained antag datum [A.name]([A.type])")
 	return A
 
 /datum/mind/proc/remove_antag_datum(datum_type)
@@ -308,7 +313,7 @@
 			else if(uplink_loc == PDA)
 				to_chat(traitor_mob, "[employer] has cunningly disguised a Syndicate Uplink as your [PDA.name]. Simply enter the code \"[U.unlock_code]\" into the ringtone select to unlock its hidden features.")
 			else if(uplink_loc == P)
-				to_chat(traitor_mob, "[employer] has cunningly disguised a Syndicate Uplink as your [P.name]. Simply twist the top of the pen [U.unlock_code] from its starting position to unlock its hidden features.")
+				to_chat(traitor_mob, "[employer] has cunningly disguised a Syndicate Uplink as your [P.name]. Simply twist the top of the pen [english_list(U.unlock_code)] from its starting position to unlock its hidden features.")
 
 		if(uplink_owner)
 			uplink_owner.antag_memory += U.unlock_note + "<br>"
@@ -580,6 +585,10 @@
 	if(!(has_antag_datum(/datum/antagonist/traitor)))
 		add_antag_datum(/datum/antagonist/traitor)
 
+/datum/mind/proc/make_Contractor_Support()
+	if(!(has_antag_datum(/datum/antagonist/traitor/contractor_support)))
+		add_antag_datum(/datum/antagonist/traitor/contractor_support)
+
 /datum/mind/proc/make_Changeling()
 	var/datum/antagonist/changeling/C = has_antag_datum(/datum/antagonist/changeling)
 	if(!C)
@@ -682,6 +691,11 @@
 /mob/proc/sync_mind()
 	mind_initialize()	//updates the mind (or creates and initializes one if one doesn't exist)
 	mind.active = 1		//indicates that the mind is currently synced with a client
+
+/datum/mind/proc/has_martialart(var/string)
+	if(martial_art && martial_art.id == string)
+		return martial_art
+	return FALSE
 
 /mob/dead/new_player/sync_mind()
 	return
